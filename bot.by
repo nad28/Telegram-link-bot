@@ -1,18 +1,51 @@
+import logging
 import os
-from telegram.ext import Updater, CommandHandler
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext
+
+# إعدادات تسجيل الدخول للبوت
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # قراءة التوكن من المتغير البيئي
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
-def start(update, context):
-    update.message.reply_text('Hello! I am your Telegram bot!')
+# دالة تبدأ البوت
+def start(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text('مرحبًا! هذا هو بوت تبادل الروابط.')
 
+# دالة لمتابعة الروابط
+def link(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text('يرجى إدخال الرابط المختصر الذي تريد مشاركته.')
+
+# دالة لمتابعة الروابط الثابتة اليومية
+def fixed_links(update: Update, context: CallbackContext) -> None:
+    fixed_links = [
+        'https://www.facebook.com',
+        'https://www.instagram.com',
+        'https://www.yourwebsite.com'
+    ]
+    message = "الروابط الثابتة:\n" + "\n".join(fixed_links)
+    update.message.reply_text(message)
+
+# الرئيسية - إضافة المعالجات
 def main():
+    # تأكد من وجود التوكن
+    if TELEGRAM_BOT_TOKEN is None:
+        logger.error("توكن البوت غير موجود في المتغير البيئي!")
+        return
+
+    # تهيئة البوت
     updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
-    dp = updater.dispatcher
+    dispatcher = updater.dispatcher
 
-    dp.add_handler(CommandHandler("start", start))
+    # إضافة أوامر للبوت
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("link", link))
+    dispatcher.add_handler(CommandHandler("fixedlinks", fixed_links))
 
+    # تشغيل البوت
     updater.start_polling()
     updater.idle()
 
